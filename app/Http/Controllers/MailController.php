@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendEmail;
 use App\Models\ResponseMsg;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -17,29 +18,47 @@ class MailController extends BaseController
 
     public function send(): \Illuminate\Http\JsonResponse
     {
-        $body = request()->all();
-        $to = $body['to'];
-        $data = $body['data'];
-        $subject = $body['subject'];
-        $template = $body['template'];
-        SendEmail::dispatch($to, $data, $subject, $template);
-        $responseMsg = new ResponseMsg(200, 'Mail sent successfully',null);
-        return response()->json($responseMsg);
+        try {
+            $body = request()->all();
+            $to = $body['to'];
+            $data = $body['data'];
+            $subject = $body['subject'];
+            $template = $body['template'];
+            SendEmail::dispatch($to, $data, $subject, $template);
+            $responseMsg = new ResponseMsg(200, 'Mail sent successfully', null);
+            return response()->json($responseMsg);
+        }catch (Exception $e) {
+            $responseMsg = new ResponseMsg(400, $e->getMessage(), null);
+            return response()->json($responseMsg);
+        }
     }
 
-    public function addTemplate():\Illuminate\Http\JsonResponse
+    public function addTemplate(): \Illuminate\Http\JsonResponse
     {
-        $body = request()->all();
-        $to = $body['to'];
-        $data = $body['data'];
-        $otp = $data['otp'];
-        $content = $body['content'];
-        $subject = $body['subject'];
-        Mail::send('emails.test', ['otp' => $otp], function ($message) use ($to, $subject) {
-            $message->to($to)->subject($subject);
-        });
-        return response()->json([
-            'message' => 'Mail sent successfully',
-        ], 200);
+        try {
+            $body = request()->all();
+            $templateName = $body['template-name'];
+            $file = $body['file'];
+            $fileExtension = $file->getClientOriginalExtension();
+            if (substr($fileExtension, -10) === '.blade.php') {
+                return response()->json([
+                    'message' => 'File extension must be blade.php',
+                ], 400);
+            }
+            $templatePath = resource_path('views/emails/' . $templateName . '.blade.php');
+            if (file_exists($templatePath)) {
+                return response()->json([
+                    'message' => 'Template already exist',
+                ], 400);
+            }
+            $file->move(resource_path('views/emails'), $templateName . '.' .'blade.php');
+            return response()->json([
+                'message' => 'Create Successfully',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
     }
 }
