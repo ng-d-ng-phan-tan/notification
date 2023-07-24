@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\GoogleDriveController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MailController;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +22,5 @@ Route::get('/', function () {
 
 Route::post('send', [MailController::class, 'send']);
 Route::post('template', [MailController::class, 'addTemplate']);
+
+Route::post('upload-file', [GoogleDriveController::class, 'uploadFile'])->name('upload.file');
