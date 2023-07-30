@@ -9,9 +9,6 @@ class GoogleDriveController extends Controller
 {
     public function uploadFile(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:jpeg,png,pdf|max:2048', // Adjust the allowed file types and size as needed.
-        ]);
         $uploadedFile = $request->file('file');
         $filename = time() . '_' . $uploadedFile->getClientOriginalName();
         $googleDisk = Storage::disk('google');
