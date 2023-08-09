@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -18,44 +19,112 @@ class FcmController extends BaseController
 
     public function saveToken(Request $request)
     {
-        auth()->user()->update(['device_token'=>$request->token]);
+        auth()->user()->update(['device_token' => $request->token]);
         return response()->json(['token saved successfully.']);
+    }
+
+    public function totalUnreadNotification($user_id)
+    {
+        $total = Notification::query()
+            ->where('is_read', false)
+            ->count();
+        return response()->json(['total' => $total]);
+    }
+
+    public function readNotification(Request $request,$user_id){
+        try{
+            $id = (int)$request->id;
+            $user_id = (string)$user_id;
+            echo $id;
+            echo $user_id;
+            Notification::query()->where('id', $id)
+                ->where('user_id', $user_id)
+                ->update(['is_read' => true]);
+            return response()->json([
+                'message' => 'Notification read successfully',
+            ]);
+        }catch (\Exception $e){
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    public function getNotification(Request $request, $user_id)
+    {
+        try {
+            $limit = $request->limit ?? 10;
+            $offset = $request->offset ?? 0;
+            $total = Notification::query()
+                ->where('user_id', $user_id)
+                ->count();
+            $notifications = Notification::query()
+                ->where('user_id', $user_id)
+                ->orderBy('created_at', 'desc')
+                ->limit($limit)
+                ->offset($offset)
+                ->get();
+            return response()->json([
+                'total' => $total,
+                'notifications' => $notifications
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
     }
 
     public function sendNotification(Request $request)
     {
-        $firebaseToken = ["dhROXxwboDeuZBbMJzzCiO:APA91bEAvFNGcGVf0sQ79wxvjp0Ge-H8IeZm4eMx8eAxkYL6W3YH7TRN2x_HOVm4lW8qx8i8hEuNxyuMEi81l29TI0rSQ-Ld9HcCfxL0pLqcrmf8Oe3nGUgzeKVsW4HBgeOJzFscupcx"];
+        try {
+            $firebaseToken = [$request->device_token];
 
-        $SERVER_API_KEY = 'AAAAliAwlnU:APA91bGoDb7nI_YyeJRFRJ3OFW7LeCBx1s1IlZEDzHwq8V_soqDSUGlxfR-7UgbkAlmLT1cX2Ck8ISFp7K_3p-56BhcuCy0999PhGA02QnyJJ0kJobHIcuX0nzyUPDLjo6F8DIUBnH4H';
+            $SERVER_API_KEY = 'AAAA3yIlcTE:APA91bFRh8pMb1AgsGhEgJSqLiszCTmNTu0pHUclCz8QZ1aTrp4rrSmAu3kH-HNqSm_6ZcgPkc_Y47_FJRSqKmzPsYzFp1fd0KDCakO9uXcZqL8KY5zpQ-hnswdlVD2Tjs3-hJ3SUpjw';
 
-        $data = [
-            "registration_ids" => $firebaseToken,
-            "notification" => [
-                "title" => $request->title,
-                "body" => $request->body,
-                "content_available" => true,
-                "priority" => "high",
-            ]
-        ];
-        $dataString = json_encode($data);
+            $data = [
+                "registration_ids" => $firebaseToken,
+                "notification" => [
+                    "title" => $request->title,
+                    "body" => $request->body,
+                    "content_available" => true,
+                    "priority" => "high",
+                ]
+            ];
+            $dataString = json_encode($data);
 
-        $headers = [
-            'Authorization: key=' . $SERVER_API_KEY,
-            'Content-Type: application/json',
-        ];
+            $headers = [
+                'Authorization: key=' . $SERVER_API_KEY,
+                'Content-Type: application/json',
+            ];
 
-        $ch = curl_init();
+            $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+            curl_setopt($ch, CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
 
-        $response = curl_exec($ch);
+            $response = curl_exec($ch);
+            $jsonResponse = json_decode($response, true);
 
-        dd($response);
+            if ($jsonResponse && isset($jsonResponse['success']) && $jsonResponse['success'] === 1) {
+                Notification::query()->create([
+                    'user_id' => $request->user_id,
+                    'title' => $request->title,
+                    'body' => $request->body,
+                    "device_token" => $request->device_token,
+                ]);
+                return response()->json(['success' => true, 'message' => 'Notification sent successfully.']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Notification sent failed.']);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+
     }
 
 }

@@ -43,13 +43,13 @@
     <script type="text/javascript">
         // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyCaFEH3Yh1ByywVsgZIUNWLTnXtvYnG0lI",
-            authDomain: "udpt-clc.firebaseapp.com",
-            projectId: "udpt-clc",
-            storageBucket: "udpt-clc.appspot.com",
-            messagingSenderId: "644785149557",
-            appId: "1:644785149557:web:1aadb611de3f9693f58a3c",
-            measurementId: "G-8Z8RK4WW9K"
+            apiKey: "AIzaSyBpk2M7YGRvX-S0DxUds_Oxhq-Fv3SZPLM",
+            authDomain: "udpt-2023.firebaseapp.com",
+            projectId: "udpt-2023",
+            storageBucket: "udpt-2023.appspot.com",
+            messagingSenderId: "958350586161",
+            appId: "1:958350586161:web:b736f4e993798649094010",
+            measurementId: "G-GKVZFFQGVJ"
         };
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
