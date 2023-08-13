@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Ramsey\Uuid\Uuid;
 
 class FcmController extends BaseController
 {
@@ -34,11 +35,9 @@ class FcmController extends BaseController
     public function readNotification(Request $request,$user_id){
         try{
             $id = (int)$request->id;
-            $user_id = (string)$user_id;
-            echo $id;
-            echo $user_id;
+            $uuid = Uuid::fromString($user_id);
             Notification::query()->where('id', $id)
-                ->where('user_id', $user_id)
+                ->where('user_id', $uuid)
                 ->update(['is_read' => true]);
             return response()->json([
                 'message' => 'Notification read successfully',
