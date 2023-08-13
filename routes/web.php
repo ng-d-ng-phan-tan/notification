@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\FcmController;
 use App\Http\Controllers\GoogleDriveController;
 use App\Http\Controllers\MailController;
-use App\Http\Controllers\FcmController;
 use Illuminate\Support\Facades\Route;
 
 /*
