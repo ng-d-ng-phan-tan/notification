@@ -186,6 +186,7 @@ return [
         // 'Example' => App\Facades\Example::class,
         'App' => Illuminate\Support\Facades\App::class,
         'Mail' => Illuminate\Support\Facades\Mail::class,
+        'Redis' => Illuminate\Support\Facades\Redis::class,
     ])->toArray(),
 
 ];

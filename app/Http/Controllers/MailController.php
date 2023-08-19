@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Jobs\SendEmail;
 use App\Models\ResponseMsg;
 use Exception;
-use Illuminate\Http\Response;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller as BaseController;
+use Redis;
 use Mail;
 
 class MailController extends BaseController
@@ -60,5 +61,14 @@ class MailController extends BaseController
                 'message' => $e->getMessage(),
             ], 400);
         }
+    }
+
+    public function testCallApi(): JsonResponse
+    {
+        $body = request()->all();
+        Redis::publish('send-mail', json_encode($body));
+        return response()->json([
+            'message' => 'success',
+        ], 200);
     }
 }

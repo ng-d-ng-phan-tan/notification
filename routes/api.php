@@ -22,6 +22,7 @@ Route::middleware(['cors'])->group(function () {
     });
     Route::post('send', [MailController::class, 'send']);
     Route::post('template', [MailController::class, 'addTemplate']);
+    Route::post('test-call-api', [MailController::class, 'testCallApi']);
     Route::post('upload-file', [GoogleDriveController::class, 'uploadFile'])->name('upload.file');
     Route::get('fcm',[FcmController::class,'index']);
     Route::post('save-token', [FcmController::class, 'saveToken'])->name('save-token');
