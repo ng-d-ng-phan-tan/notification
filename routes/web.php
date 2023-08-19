@@ -19,6 +19,9 @@ Route::middleware(['cors'])->group(function () {
     Route::get('/', function () {
         return view('welcome');
     });
+    Route::get('/test', function () {
+        return "Notification OK";
+    });
     Route::post('send', [MailController::class, 'send']);
     Route::post('template', [MailController::class, 'addTemplate']);
     Route::post('upload-file', [GoogleDriveController::class, 'uploadFile'])->name('upload.file');
