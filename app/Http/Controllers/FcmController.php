@@ -32,11 +32,10 @@ class FcmController extends BaseController
         return response()->json(['total' => $total]);
     }
 
-    public function readNotification(Request $request,$user_id){
+    public function readNotification($user_id){
         try{
-            $id = (int)$request->id;
             $uuid = Uuid::fromString($user_id);
-            Notification::query()->where('id', $id)
+            Notification::query()
                 ->where('user_id', $uuid)
                 ->update(['is_read' => true]);
             return response()->json([
@@ -63,9 +62,14 @@ class FcmController extends BaseController
                 ->limit($limit)
                 ->offset($offset)
                 ->get();
+            $totalUnread = Notification::query()
+                ->where('user_id', $user_id)
+                ->where('is_read', false)
+                ->count();
             return response()->json([
                 'total' => $total,
-                'notifications' => $notifications
+                'notifications' => $notifications,
+                'totalUnread' => $totalUnread,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -110,13 +114,13 @@ class FcmController extends BaseController
             $jsonResponse = json_decode($response, true);
 
             if ($jsonResponse && isset($jsonResponse['success']) && $jsonResponse['success'] === 1) {
-                Notification::query()->create([
+                $notification = Notification::query()->create([
                     'user_id' => $request->user_id,
                     'title' => $request->title,
                     'body' => $request->body,
                     "device_token" => $request->device_token,
                 ]);
-                return response()->json(['success' => true, 'message' => 'Notification sent successfully.']);
+                return response()->json(['success' => true, 'message' => 'Notification sent successfully.', 'notification' => $notification]);
             } else {
                 return response()->json(['success' => false, 'message' => 'Notification sent failed.']);
             }
